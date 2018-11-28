@@ -1,6 +1,7 @@
 # house
 elasticsearch
 
+## mysql安装相关脚本
 ```
 [mysql]
 default-character-set=utf-8
@@ -14,3 +15,4 @@ default-storage-engine=INNODB
 
 skip-gran-tables
 ```
+
