@@ -1,6 +1,7 @@
 package com.yliao.house.config;
 
 import com.yliao.house.security.AuthProvider;
+import com.yliao.house.security.LoginUrlEntryPoint;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
@@ -34,7 +35,17 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .and()
                 .formLogin()
                 .loginProcessingUrl("/login") //配置角色登录处理入口
-                .and();
+                .and()
+                .logout()
+                .logoutUrl("/logout") // 处理退出请求
+                .logoutSuccessUrl("/logout/page") // 请求成功后走的controller 映射
+                .deleteCookies("JSESSIONID")
+                .invalidateHttpSession(true) // 回话失效
+                .and()
+                .exceptionHandling()
+                .authenticationEntryPoint(loginUrlEntryPoint())
+                .accessDeniedPage("/403");
+
         http.csrf().disable();// 关闭防御策略
         http.headers().frameOptions().sameOrigin(); // 同源策略
     }
@@ -57,5 +68,10 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     @Bean
     public AuthProvider authProvider() {
         return new AuthProvider();
+    }
+
+    @Bean
+    public LoginUrlEntryPoint loginUrlEntryPoint () {
+        return new LoginUrlEntryPoint("/user/login");
     }
 }
