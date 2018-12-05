@@ -40,7 +40,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .logoutUrl("/logout") // 处理退出请求
                 .logoutSuccessUrl("/logout/page") // 请求成功后走的controller 映射
                 .deleteCookies("JSESSIONID")
-                .invalidateHttpSession(true) // 回话失效
+                .invalidateHttpSession(true) // 会话失效
                 .and()
                 .exceptionHandling()
                 .authenticationEntryPoint(loginUrlEntryPoint())
