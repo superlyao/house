@@ -1,6 +1,7 @@
 package com.yliao.house.config;
 
 import com.yliao.house.security.AuthProvider;
+import com.yliao.house.security.LoginAuthFailHandler;
 import com.yliao.house.security.LoginUrlEntryPoint;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -35,6 +36,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .and()
                 .formLogin()
                 .loginProcessingUrl("/login") //配置角色登录处理入口
+                .failureHandler(authFailHandler())
                 .and()
                 .logout()
                 .logoutUrl("/logout") // 处理退出请求
@@ -73,5 +75,10 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     @Bean
     public LoginUrlEntryPoint loginUrlEntryPoint () {
         return new LoginUrlEntryPoint("/user/login");
+    }
+
+    @Bean
+    public LoginAuthFailHandler authFailHandler() {
+        return new LoginAuthFailHandler(loginUrlEntryPoint());
     }
 }
