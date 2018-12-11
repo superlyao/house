@@ -1,10 +1,10 @@
-package com.yliao.house.service.user;
+package com.yliao.house.service.user.impl;
 
 import com.yliao.house.entity.Role;
 import com.yliao.house.entity.User;
 import com.yliao.house.repository.RoleRepository;
 import com.yliao.house.repository.UserRepository;
-import com.yliao.house.service.IUserService;
+import com.yliao.house.service.user.IUserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.core.GrantedAuthority;

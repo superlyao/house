@@ -1,5 +1,10 @@
 package com.yliao.house.config;
 
+import com.qiniu.common.Zone;
+import com.qiniu.storage.BucketManager;
+import com.qiniu.storage.UploadManager;
+import com.qiniu.util.Auth;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -52,5 +57,48 @@ public class WebFileUploadConfig {
         resolver.setResolveLazily(this.multipartProperties.isResolveLazily());
         return resolver;
     }
+
+    /**
+     * 机房配置
+     */
+    @Bean
+    public com.qiniu.storage.Configuration configuration() {
+        return new com.qiniu.storage.Configuration(Zone.zone0());
+    }
+
+    /**
+     * 构建一个上传工具实列
+     */
+    @Bean
+    public UploadManager uploadManager() {
+        return new UploadManager(configuration());
+    }
+
+    @Value("${qiniu.AccessKey}")
+    private String accessKey;
+    @Value("${qiniu.SecretKey}")
+    private String secretKey;
+    @Value("${qiniu.Bucket}")
+    private String bucket;
+    @Value("${qiniu.cdn.prefix}")
+    private String prefix;
+
+    /**
+     * 认证信息实列
+     * @return
+     */
+    @Bean
+    public Auth auth() {
+        return Auth.create(accessKey, secretKey);
+    }
+
+    /**
+     * 构建空间管理实例
+     */
+    @Bean
+    public BucketManager bucketManager() {
+        return new BucketManager(auth(), configuration());
+    }
+
 
 }

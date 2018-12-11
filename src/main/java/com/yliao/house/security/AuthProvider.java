@@ -1,7 +1,7 @@
 package com.yliao.house.security;
 
 import com.yliao.house.entity.User;
-import com.yliao.house.service.IUserService;
+import com.yliao.house.service.user.IUserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.security.authentication.AuthenticationProvider;

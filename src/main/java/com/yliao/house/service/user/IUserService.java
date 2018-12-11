@@ -1,4 +1,4 @@
-package com.yliao.house.service;
+package com.yliao.house.service.user;
 
 import com.yliao.house.entity.User;
 
