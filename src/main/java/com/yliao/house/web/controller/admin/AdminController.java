@@ -1,6 +1,8 @@
 package com.yliao.house.web.controller.admin;
 
 import com.yliao.house.base.ApiResponse;
+import groovy.util.logging.Log;
+import groovy.util.logging.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
