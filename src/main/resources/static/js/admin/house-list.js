@@ -171,6 +171,7 @@ $(function () {
         }
         var str = '';
         $.each(data.data, function (i, item) {
+            // console.log('item', )
             str += "<option value=" + item.en_name + ">" + item.cn_name + "</option>";
         });
         $city.append(str);

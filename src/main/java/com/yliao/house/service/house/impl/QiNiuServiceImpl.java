@@ -21,18 +21,30 @@ import java.io.InputStream;
  */
 @Service
 public class QiNiuServiceImpl implements IQiNiuService, InitializingBean {
+    /**
+     * 上传管理实列
+     */
     @Autowired
     private UploadManager uploadManager;
 
+    /**
+     * 空间管理实例
+     */
     @Autowired
     private BucketManager bucketManager;
 
+    /**
+     * 安全验证实例
+     */
     @Autowired
     private Auth auth;
 
     @Value("${qiniu.Bucket}")
     private String bucket;
 
+    /**
+     * 返回的结果 用于自定义
+     */
     private StringMap putPolicy;
 
     @Override
@@ -49,14 +61,31 @@ public class QiNiuServiceImpl implements IQiNiuService, InitializingBean {
 
     @Override
     public Response uploadFile(InputStream inputStream) throws QiniuException {
-        return null;
+        Response response = this.uploadManager.put(inputStream, null, getAuthToken(), null, null);
+        // 重试次数
+        int retry = 0;
+        while (response.needRetry() && retry < 3) {
+            response = this.uploadManager.put(inputStream, null, getAuthToken(),null, null);
+            retry++;
+        }
+        return response;
     }
 
     @Override
     public Response delete(String key) throws QiniuException {
-        return null;
+        Response response = bucketManager.delete(this.bucket, key);
+        int retry = 0;
+        while (response.needRetry() && retry < 3) {
+            response = bucketManager.delete(this.bucket, key);
+        }
+        return response;
     }
 
+    /**
+     * 实现接口 InitializingBean
+     * 定义接口返回的格式
+     * @throws Exception
+     */
     @Override
     public void afterPropertiesSet() throws Exception {
         this.putPolicy = new StringMap();

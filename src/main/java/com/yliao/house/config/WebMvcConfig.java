@@ -1,5 +1,6 @@
 package com.yliao.house.config;
 
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.BeansException;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.ApplicationContext;
@@ -74,5 +75,10 @@ public class WebMvcConfig extends WebMvcConfigurerAdapter implements Application
         ThymeleafViewResolver resolver = new ThymeleafViewResolver();
         resolver.setTemplateEngine(templateEngine());
         return resolver;
+    }
+
+    @Bean
+    public ModelMapper modelMapper() {
+        return new ModelMapper();
     }
 }

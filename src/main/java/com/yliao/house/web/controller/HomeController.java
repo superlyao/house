@@ -1,6 +1,5 @@
 package com.yliao.house.web.controller;
 
-import com.yliao.house.base.ApiResponse;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,6 +17,7 @@ public class HomeController {
     }
 
     @GetMapping("/404")
+    @ResponseBody
     public String notFoundPage() {
         return "404";
     }
