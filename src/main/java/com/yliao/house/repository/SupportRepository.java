@@ -12,4 +12,7 @@ public interface SupportRepository extends CrudRepository<SupportAddress, Long> 
      * @return
      */
     List<SupportAddress> findAllByLevel(String level);
+
+    List<SupportAddress> findAllByLevelAndBelongTo(String enName, String belongTo);
+
 }
