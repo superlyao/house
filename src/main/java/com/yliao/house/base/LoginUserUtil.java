@@ -3,6 +3,9 @@ package com.yliao.house.base;
 import com.yliao.house.entity.User;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+/**
+ * 获取登陆用户信息的工具类
+ */
 public class LoginUserUtil {
     public static User load() {
         // 获取当前认证的用户
