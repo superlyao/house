@@ -15,6 +15,7 @@ import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -48,7 +49,7 @@ public class HouseServiceImpl implements IHouseService {
     @Value("${qiniu.cdn.prefix}")
     private String prefix;
 
-
+    @Transactional
     @Override
     public ServiceResult<HouseDTO> save(HouseForm houseForm) {
         // 房屋详细信息实体
