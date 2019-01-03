@@ -3,8 +3,10 @@ package com.yliao.house.web.controller.admin;
 import com.google.gson.Gson;
 import com.qiniu.common.QiniuException;
 import com.qiniu.http.Response;
+import com.yliao.house.base.ApiDataTableResponse;
 import com.yliao.house.base.ApiResponse;
 import com.yliao.house.entity.SupportAddress;
+import com.yliao.house.service.ServiceMultiResult;
 import com.yliao.house.service.ServiceResult;
 import com.yliao.house.service.house.IAddressService;
 import com.yliao.house.service.house.IHouseService;
@@ -12,6 +14,7 @@ import com.yliao.house.service.house.IQiNiuService;
 import com.yliao.house.web.dto.HouseDTO;
 import com.yliao.house.web.dto.QiNiuPutRet;
 import com.yliao.house.web.dto.SupportAddressDTO;
+import com.yliao.house.web.form.DataTableSearch;
 import com.yliao.house.web.form.HouseForm;
 import groovy.util.logging.Log;
 import groovy.util.logging.Slf4j;
@@ -63,6 +66,10 @@ public class AdminController {
         return "admin/login";
     }
 
+    /**
+     * 新增房源页
+     * @return
+     */
     @GetMapping("admin/add/house")
     public String addHousePage() {
         return "admin/house-add";
@@ -96,6 +103,12 @@ public class AdminController {
         }
     }
 
+    /**
+     * 新增房源功能
+     * @param houseForm
+     * @param bindingResult
+     * @return
+     */
     @PostMapping("admin/add/house")
     @ResponseBody
     public ApiResponse addHouse(@Valid @ModelAttribute("form-house-add")HouseForm houseForm,
@@ -116,4 +129,27 @@ public class AdminController {
         }
         return ApiResponse.ofSuccess(ApiResponse.Status.NOT_VALID_PARAM);
     }
+
+
+    /**
+     * 房源列表页
+     * @return
+     */
+    @GetMapping("admin/house/list")
+    public String houseListPage() {
+        return "admin/house-list";
+    }
+
+    @PostMapping("admin/houses")
+    @ResponseBody
+    public ApiDataTableResponse houses(@ModelAttribute DataTableSearch searchBody) {
+        ServiceMultiResult<HouseDTO> serviceMultiResult = houseService.adminQuery(searchBody);
+        ApiDataTableResponse response = new ApiDataTableResponse(ApiResponse.Status.SUCCESS);
+        response.setData(serviceMultiResult.getResult());
+        response.setRecordsFiltered(serviceMultiResult.getTotal());
+        response.setRecordsTotal(serviceMultiResult.getTotal());
+        response.setDraw(searchBody.getDraw());
+        return response;
+    }
+
 }

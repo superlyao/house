@@ -1,14 +1,15 @@
 package com.yliao.house.service.house.impl;
 
-import com.sun.org.apache.xpath.internal.FoundIndex;
 import com.yliao.house.base.LoginUserUtil;
 import com.yliao.house.entity.*;
 import com.yliao.house.repository.*;
+import com.yliao.house.service.ServiceMultiResult;
 import com.yliao.house.service.ServiceResult;
 import com.yliao.house.service.house.IHouseService;
 import com.yliao.house.web.dto.HouseDTO;
 import com.yliao.house.web.dto.HouseDetailDTO;
 import com.yliao.house.web.dto.HousePictureDTO;
+import com.yliao.house.web.form.DataTableSearch;
 import com.yliao.house.web.form.HouseForm;
 import com.yliao.house.web.form.PhotoForm;
 import org.modelmapper.ModelMapper;
@@ -87,10 +88,10 @@ public class HouseServiceImpl implements IHouseService {
         housePictures.forEach(housePicture -> pictureDTOS.add(modelMapper.map(housePicture, HousePictureDTO.class)));
 
         houseDTO.setPictures(pictureDTOS);
-        house.setCover(this.prefix + houseDTO.getCover());
+        houseDTO.setCover(this.prefix + houseDTO.getCover());
 
         List<String> tags = houseForm.getTags();
-        if (tags !=null || !tags.isEmpty()) {
+        if (tags !=null && !tags.isEmpty()) {
             List<HouseTag> houseTags = new ArrayList<>();
             for (String tag : tags) {
                 houseTags.add(new HouseTag(house.getId(), tag));
@@ -99,6 +100,19 @@ public class HouseServiceImpl implements IHouseService {
             houseDTO.setTags(tags);
         }
         return new ServiceResult<>(true, null, houseDTO);
+    }
+
+    @Override
+    public ServiceMultiResult<HouseDTO> adminQuery(DataTableSearch searchBody) {
+        List<HouseDTO> houseDTOS = new ArrayList<>();
+        Iterable<House> houses = houseRepository.findAll();
+        houses.forEach(house -> {
+            HouseDTO houseDTO = modelMapper.map(house, HouseDTO.class);
+            houseDTO.setCover(this.prefix + house.getCover());
+            houseDTOS.add(houseDTO);
+        });
+
+        return new ServiceMultiResult<HouseDTO>(houseDTOS.size(), houseDTOS);
     }
 
     private List<HousePicture> generatePictures(HouseForm houseForm, Long houseId) {
