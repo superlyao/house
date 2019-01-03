@@ -66,13 +66,17 @@ public class HouseServiceImpl implements IHouseService {
         house.setCreateTime(now);
         house.setLastUpdateTime(now);
         house.setAdminId(LoginUserUtil.getUserId());
+        // 存储房源
         house = houseRepository.save(house);
 
         detail.setHouseId(house.getId());
+        // 存储房源详细信息
         detail = houseDetailRepository.save(detail);
 
+        // 获取从页面传过来的图片信息
         List<HousePicture> pictures = generatePictures(houseForm, house.getId());
 
+        // 存储图片
         Iterable<HousePicture> housePictures = housePictureRepository.save(pictures);
 
         HouseDTO houseDTO = modelMapper.map(house, HouseDTO.class);
