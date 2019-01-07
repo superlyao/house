@@ -5,6 +5,7 @@ import com.yliao.house.entity.SubwayStation;
 import com.yliao.house.repository.SubwayRepository;
 import com.yliao.house.repository.SubwayStationRepository;
 import com.yliao.house.repository.SupportAddressRepository;
+import com.yliao.house.service.ServiceResult;
 import com.yliao.house.web.dto.SubwayDTO;
 import com.yliao.house.entity.SupportAddress;
 import com.yliao.house.repository.SupportRepository;
@@ -95,5 +96,29 @@ public class AddressServiceImpl implements IAddressService {
         result.put(SupportAddress.Level.CITY, modelMapper.map(city, SupportAddressDTO.class));
         result.put(SupportAddress.Level.REGION, modelMapper.map(region, SupportAddressDTO.class));
         return result;
+    }
+
+    @Override
+    public ServiceResult<SubwayDTO> findSubway(Long subwayId) {
+        if (subwayId == null) {
+            return ServiceResult.notFound();
+        }
+        Subway subway = subwayRepository.findOne(subwayId);
+        if (subway == null) {
+            return ServiceResult.notFound();
+        }
+        return ServiceResult.of(modelMapper.map(subway, SubwayDTO.class));
+    }
+
+    @Override
+    public ServiceResult<SubwayStationDTO> findSubwayStation(Long stationId) {
+        if (stationId == null) {
+            return ServiceResult.notFound();
+        }
+        SubwayStation station = subwayStationRepository.findOne(stationId);
+        if (station == null) {
+            return ServiceResult.notFound();
+        }
+        return ServiceResult.of(modelMapper.map(station, SubwayStationDTO.class));
     }
 }

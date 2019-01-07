@@ -11,9 +11,7 @@ import com.yliao.house.service.ServiceResult;
 import com.yliao.house.service.house.IAddressService;
 import com.yliao.house.service.house.IHouseService;
 import com.yliao.house.service.house.IQiNiuService;
-import com.yliao.house.web.dto.HouseDTO;
-import com.yliao.house.web.dto.QiNiuPutRet;
-import com.yliao.house.web.dto.SupportAddressDTO;
+import com.yliao.house.web.dto.*;
 import com.yliao.house.web.form.DataTableSearch;
 import com.yliao.house.web.form.HouseForm;
 import groovy.util.logging.Log;
@@ -22,9 +20,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import sun.security.pkcs11.Secmod;
 
 import javax.validation.Valid;
 import java.io.File;
@@ -152,4 +152,51 @@ public class AdminController {
         return response;
     }
 
+    @GetMapping("admin/house/edit")
+    public String houseEditPage(@RequestParam(value = "id") Long id, Model model) {
+        if (id == null || id < 1) {
+            return "404";
+        }
+        ServiceResult<HouseDTO> completeOne = houseService.findCompleteOne(id);
+        if(!completeOne.isSuccess()) {
+            return "404";
+        }
+        HouseDTO result = completeOne.getResult();
+        model.addAttribute("house", result);
+        Map<SupportAddress.Level, SupportAddressDTO> cityAndRegion = addressService.findCityAndRegion(result.getCityEnName(), result.getRegionEnName());
+        model.addAttribute("city", cityAndRegion.get(SupportAddress.Level.CITY));
+        model.addAttribute("region", cityAndRegion.get(SupportAddress.Level.REGION));
+        HouseDetailDTO detailDTO =  result.getHouseDetail();
+        ServiceResult<SubwayDTO> subwayDTOServiceResult = addressService.findSubway(detailDTO.getSubwayLineId());
+        if (subwayDTOServiceResult.isSuccess()) {
+            model.addAttribute("subway", subwayDTOServiceResult.getResult());
+        }
+
+        ServiceResult<SubwayStationDTO> subwayStationDTOServiceResult = addressService.findSubwayStation(detailDTO.getSubwayStationId());
+        if (subwayStationDTOServiceResult.isSuccess()) {
+            model.addAttribute("station", subwayStationDTOServiceResult.getResult());
+        }
+        return "admin/house-edit";
+    }
+
+    @PostMapping("admin/house/edit")
+    @ResponseBody
+    public ApiResponse saveHouse(@Valid @ModelAttribute("form-house-edid")HouseForm houseForm,
+                                 BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            return new ApiResponse(HttpStatus.BAD_REQUEST.value(), bindingResult.getAllErrors().get(0).toString(), null);
+        }
+        Map<SupportAddress.Level, SupportAddressDTO> addressDTOMap = addressService.findCityAndRegion(houseForm.getCityEnName(), houseForm.getRegionEnName());
+
+        if (addressDTOMap.size() != 2) {
+            return ApiResponse.ofSuccess(ApiResponse.Status.NOT_VALID_PARAM);
+        }
+        ServiceResult result = houseService.update(houseForm);
+        if (result.isSuccess()) {
+            return ApiResponse.ofSuccess(null);
+        }
+        ApiResponse response = ApiResponse.ofStatus(ApiResponse.Status.BAD_REQUEST);
+        response.setMessage(result.getMessage());
+        return response;
+    }
 }

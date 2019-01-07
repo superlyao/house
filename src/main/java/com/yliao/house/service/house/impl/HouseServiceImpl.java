@@ -110,6 +110,30 @@ public class HouseServiceImpl implements IHouseService {
     }
 
     @Override
+    public ServiceResult update(HouseForm houseForm) {
+        House house = this.houseRepository.findOne(houseForm.getId());
+        if (house == null) {
+            return ServiceResult.notFound();
+        }
+        HouseDetail detail = this.houseDetailRepository.findByHouseId(houseForm.getId());
+        ServiceResult wrapperRrsult = warpperSubwayInfo(detail, houseForm);
+        if (wrapperRrsult != null) {
+            return wrapperRrsult;
+        }
+        houseDetailRepository.save(detail);
+        List<HousePicture> pictures = generatePictures(houseForm, houseForm.getId());
+        housePictureRepository.save(pictures);
+
+        if (houseForm.getCover() == null) {
+            houseForm.setCover(house.getCover());
+        }
+        modelMapper.map(houseForm, house);
+        house.setLastUpdateTime(new Date());
+        houseRepository.save(house);
+        return ServiceResult.success();
+    }
+
+    @Override
     public ServiceMultiResult<HouseDTO> adminQuery(DataTableSearch searchBody) {
         List<HouseDTO> houseDTOS = new ArrayList<>();
 
@@ -148,6 +172,38 @@ public class HouseServiceImpl implements IHouseService {
         });
 
         return new ServiceMultiResult<>(houses.getTotalElements(), houseDTOS);
+    }
+
+    @Override
+    public ServiceResult<HouseDTO> findCompleteOne(Long id) {
+        House house = houseRepository.findOne(id);
+        if (house == null) {
+            return  ServiceResult.notFound();
+        }
+        // 查询房屋的详细信息
+        HouseDetail detail = houseDetailRepository.findByHouseId(id);
+        // 查询房屋的图片
+        List<HousePicture> pictures = housePictureRepository.findAllByHouseId(id);
+        // 查询房屋所有的标签
+        List<HouseTag> tags = houseTagRepository.findAllByHouseId(id);
+
+        HouseDetailDTO houseDetailDTO = modelMapper.map(detail, HouseDetailDTO.class);
+        List<HousePictureDTO> pictureDTOS = new ArrayList<>();
+        for (HousePicture picture : pictures) {
+            HousePictureDTO pictureDTO = modelMapper.map(picture, HousePictureDTO.class);
+            pictureDTOS.add(pictureDTO);
+        }
+
+        List<String> tagList = new ArrayList<>();
+
+        for (HouseTag tag : tags) {
+            tagList.add(tag.getName());
+        }
+        HouseDTO result = modelMapper.map(house, HouseDTO.class);
+        result.setHouseDetail(houseDetailDTO);
+        result.setPictures(pictureDTOS);
+        result.setTags(tagList);
+        return ServiceResult.of(result);
     }
 
     private List<HousePicture> generatePictures(HouseForm houseForm, Long houseId) {
