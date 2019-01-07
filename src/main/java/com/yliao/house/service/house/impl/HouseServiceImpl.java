@@ -15,6 +15,10 @@ import com.yliao.house.web.form.PhotoForm;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -105,14 +109,19 @@ public class HouseServiceImpl implements IHouseService {
     @Override
     public ServiceMultiResult<HouseDTO> adminQuery(DataTableSearch searchBody) {
         List<HouseDTO> houseDTOS = new ArrayList<>();
-        Iterable<House> houses = houseRepository.findAll();
+
+        Sort sort = new Sort(Sort.Direction.fromString(searchBody.getDirection()), searchBody.getOrderBy());
+        int page = searchBody.getStart() / searchBody.getLength();
+        Pageable pageable = new PageRequest(page, searchBody.getLength(), sort);
+
+        Page<House> houses = houseRepository.findAll(pageable);
         houses.forEach(house -> {
             HouseDTO houseDTO = modelMapper.map(house, HouseDTO.class);
             houseDTO.setCover(this.prefix + house.getCover());
             houseDTOS.add(houseDTO);
         });
 
-        return new ServiceMultiResult<HouseDTO>(houseDTOS.size(), houseDTOS);
+        return new ServiceMultiResult<>(houses.getTotalElements(), houseDTOS);
     }
 
     private List<HousePicture> generatePictures(HouseForm houseForm, Long houseId) {
