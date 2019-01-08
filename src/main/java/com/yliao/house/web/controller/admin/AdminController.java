@@ -5,6 +5,8 @@ import com.qiniu.common.QiniuException;
 import com.qiniu.http.Response;
 import com.yliao.house.base.ApiDataTableResponse;
 import com.yliao.house.base.ApiResponse;
+import com.yliao.house.base.HouseOperation;
+import com.yliao.house.base.HouseStatus;
 import com.yliao.house.entity.SupportAddress;
 import com.yliao.house.service.ServiceMultiResult;
 import com.yliao.house.service.ServiceResult;
@@ -181,7 +183,7 @@ public class AdminController {
 
     @PostMapping("admin/house/edit")
     @ResponseBody
-    public ApiResponse saveHouse(@Valid @ModelAttribute("form-house-edid")HouseForm houseForm,
+    public ApiResponse saveHouse(@Valid @ModelAttribute("form-house-edit")HouseForm houseForm,
                                  BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
             return new ApiResponse(HttpStatus.BAD_REQUEST.value(), bindingResult.getAllErrors().get(0).toString(), null);
@@ -198,5 +200,47 @@ public class AdminController {
         ApiResponse response = ApiResponse.ofStatus(ApiResponse.Status.BAD_REQUEST);
         response.setMessage(result.getMessage());
         return response;
+    }
+
+    /**
+     * 房屋审核
+     * @param id
+     * @param operation
+     * @return
+     */
+    @PutMapping("admin/house/operate/{id}/{operation}")
+    @ResponseBody
+    public ApiResponse operateHouse(@PathVariable(value = "id")Long id,
+                                    @PathVariable(value = "operation") int operation) {
+
+        if (id <=0) {
+            return ApiResponse.ofStatus(ApiResponse.Status.NOT_VALID_PARAM);
+        }
+        if (operation == 1) {
+            this.houseService.updateStatus(id, HouseStatus.PASSES.getValue());
+            return ApiResponse.ofStatus(ApiResponse.Status.SUCCESS);
+        }
+        ServiceResult result;
+        switch (operation) {
+            case HouseOperation.PASS:
+                result = this.houseService.updateStatus(id, HouseStatus.PASSES.getValue());
+                break;
+            case HouseOperation.PULL_OUT:
+                result = this.houseService.updateStatus(id, HouseStatus.NOT_AUDITED.getValue());
+                break;
+            case HouseOperation.DELETE:
+                result = this.houseService.updateStatus(id, HouseStatus.DELETED.getValue());
+                break;
+            case HouseOperation.RENT:
+                result = this.houseService.updateStatus(id, HouseStatus.RENTED.getValue());
+                break;
+            default:
+                return ApiResponse.ofStatus(ApiResponse.Status.BAD_REQUEST);
+        }
+        if (result.isSuccess()) {
+            return ApiResponse.ofSuccess(null);
+        }
+
+        return ApiResponse.ofMessage(HttpStatus.BAD_REQUEST.value(), result.getMessage());
     }
 }

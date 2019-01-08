@@ -20,4 +20,6 @@ public interface IHouseService {
      * @return
      */
     ServiceResult<HouseDTO> findCompleteOne(Long id);
+
+    ServiceResult updateStatus(Long id, int status);
 }

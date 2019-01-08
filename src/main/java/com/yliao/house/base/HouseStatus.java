@@ -5,7 +5,7 @@ package com.yliao.house.base;
  */
 public enum  HouseStatus {
     NOT_AUDITED(0),
-    PASSES(0),
+    PASSES(1),
     RENTED(2),
     DELETED(3);
 
