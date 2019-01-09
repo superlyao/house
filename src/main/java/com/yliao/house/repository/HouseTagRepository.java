@@ -7,4 +7,6 @@ import java.util.List;
 
 public interface HouseTagRepository extends CrudRepository<HouseTag, Long> {
     List<HouseTag> findAllByHouseId(Long id);
+
+    List<HouseTag> findAllByHouseIdIn(List<Long> houseIds);
 }

@@ -6,6 +6,7 @@ import com.yliao.house.service.ServiceResult;
 import com.yliao.house.web.dto.HouseDTO;
 import com.yliao.house.web.form.DataTableSearch;
 import com.yliao.house.web.form.HouseForm;
+import com.yliao.house.web.form.RentSearch;
 
 public interface IHouseService {
     ServiceResult<HouseDTO> save(HouseForm houseForm);
@@ -22,4 +23,6 @@ public interface IHouseService {
     ServiceResult<HouseDTO> findCompleteOne(Long id);
 
     ServiceResult updateStatus(Long id, int status);
+
+    ServiceMultiResult<HouseDTO> query(RentSearch rentSearch);
 }
