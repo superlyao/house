@@ -66,7 +66,7 @@ public class SearchServiceImpl implements ISearchService {
     public boolean index(Long houseId) {
         House house = houseRepository.findOne(houseId);
         if (house == null) {
-            LOGGER.error("INDEX hosue {} dose not exist!", houseId);
+            LOGGER.error("INDEX house {} dose not exist!", houseId);
         }
         HouseIndexTemplate template = new HouseIndexTemplate();
         modelMapper.map(house, template);

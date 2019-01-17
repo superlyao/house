@@ -140,6 +140,7 @@ public class HouseServiceImpl implements IHouseService {
         modelMapper.map(houseForm, house);
         house.setLastUpdateTime(new Date());
         houseRepository.save(house);
+        // 如果是更新且是上架状态就创建索引
         if (house.getStatus() == HouseStatus.PASSES.getValue()) {
             searchService.index(house.getId());
         }

@@ -10,13 +10,17 @@ import org.springframework.context.annotation.Configuration;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
+
+/**
+ * elasticsearch配置
+ */
 @Configuration
 public class ElasticSearchConfig {
     @Bean
     public TransportClient esClient() throws UnknownHostException {
         Settings settings = Settings.builder()
-                .put("cluster.name", "elasticsearch")
-                .put("client.transport.sniff", true)
+                .put("cluster.name", "elasticsearch")// 集群名字
+                .put("client.transport.sniff", true) //是否嗅探集群中的节点
                 .build();
 
         InetSocketTransportAddress master = new InetSocketTransportAddress(
