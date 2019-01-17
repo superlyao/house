@@ -9,6 +9,8 @@ import com.yliao.house.repository.*;
 import com.yliao.house.service.ServiceMultiResult;
 import com.yliao.house.service.ServiceResult;
 import com.yliao.house.service.house.IHouseService;
+import com.yliao.house.service.house.IQiNiuService;
+import com.yliao.house.service.search.ISearchService;
 import com.yliao.house.web.dto.HouseDTO;
 import com.yliao.house.web.dto.HouseDetailDTO;
 import com.yliao.house.web.dto.HousePictureDTO;
@@ -58,6 +60,9 @@ public class HouseServiceImpl implements IHouseService {
 
     @Autowired
     private HouseTagRepository houseTagRepository;
+
+    @Autowired
+    private ISearchService searchService;
 
     @Value("${qiniu.cdn.prefix}")
     private String prefix;
@@ -135,6 +140,9 @@ public class HouseServiceImpl implements IHouseService {
         modelMapper.map(houseForm, house);
         house.setLastUpdateTime(new Date());
         houseRepository.save(house);
+        if (house.getStatus() == HouseStatus.PASSES.getValue()) {
+            searchService.index(house.getId());
+        }
         return ServiceResult.success();
     }
 
@@ -228,6 +236,12 @@ public class HouseServiceImpl implements IHouseService {
         }
 
         houseRepository.updateStatus(id, status);
+        // 上架更新索引 其他情况删除索引
+        if (status == HouseStatus.PASSES.getValue()) {
+            searchService.index(id);
+        } else {
+            searchService.remove(id);
+        }
         return ServiceResult.success();
     }
 
