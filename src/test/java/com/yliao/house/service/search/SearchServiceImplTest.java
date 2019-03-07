@@ -18,6 +18,6 @@ public class SearchServiceImplTest extends HouseApplicationTests {
 
     @Test
     public void testRemove() {
-        searchService.remove(17L);
+        searchService.remove(35L);
     }
 }

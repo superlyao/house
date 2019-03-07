@@ -35,8 +35,10 @@ import java.util.List;
 public class SearchServiceImpl implements ISearchService {
     private static final Logger LOGGER = LoggerFactory.getLogger(SearchServiceImpl.class);
 
+    // 索引名
     private static final String INDEX_NAME = "xunwu";
 
+    // 索引类型
     private static final String INDEX_TYPE ="house";
 
     @Autowired
@@ -67,6 +69,7 @@ public class SearchServiceImpl implements ISearchService {
         House house = houseRepository.findOne(houseId);
         if (house == null) {
             LOGGER.error("INDEX house {} dose not exist!", houseId);
+            return false;
         }
         HouseIndexTemplate template = new HouseIndexTemplate();
         modelMapper.map(house, template);
@@ -99,6 +102,7 @@ public class SearchServiceImpl implements ISearchService {
             String esId = searchResponse.getHits().getAt(0).getId();
             success = update(esId, template);
         } else {
+            // 如果存在多个就删除原来的新建一个
             success = deleteAndCreate(totalHits, template);
         }
         if (success) {

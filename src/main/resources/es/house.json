@@ -1,6 +1,6 @@
 {
   "settings": {
-    "number_of_replicas": 0
+    "number_of_replicas": 0 /** 不需要备份节点**/
   },
   "mappings": {
     "house": {
@@ -11,7 +11,7 @@
         },
         "title": {
           "type": "text",
-          "index": "analyzed"
+          "index": "analyzed" /** 被中文分词的**/
         },
         "price": {
           "type": "integer"

@@ -23,6 +23,7 @@ public class ElasticSearchConfig {
                 .put("client.transport.sniff", true) //是否嗅探集群中的节点
                 .build();
 
+        // 9300 是TCP监听的端口 9200是http监听的端口
         InetSocketTransportAddress master = new InetSocketTransportAddress(
                 InetAddress.getByName("127.0.0.1"), 9300
         );
