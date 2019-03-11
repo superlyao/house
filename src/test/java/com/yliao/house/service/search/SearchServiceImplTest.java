@@ -1,7 +1,6 @@
 package com.yliao.house.service.search;
 
 import com.yliao.house.HouseApplicationTests;
-import org.junit.Assert;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -12,8 +11,7 @@ public class SearchServiceImplTest extends HouseApplicationTests {
 
     @Test
     public void testIndex() {
-        boolean index = searchService.index(17L);
-        Assert.assertTrue(index);
+        searchService.index(17L);
     }
 
     @Test
