@@ -2,35 +2,45 @@ package com.yliao.house.service.search.impl;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.primitives.Longs;
+import com.yliao.house.base.HouseSort;
 import com.yliao.house.entity.House;
 import com.yliao.house.entity.HouseDetail;
 import com.yliao.house.entity.HouseTag;
 import com.yliao.house.repository.HouseDetailRepository;
 import com.yliao.house.repository.HouseRepository;
 import com.yliao.house.repository.HouseTagRepository;
+import com.yliao.house.service.ServiceMultiResult;
 import com.yliao.house.service.search.HouseIndexKey;
 import com.yliao.house.service.search.HouseIndexMessage;
 import com.yliao.house.service.search.HouseIndexTemplate;
 import com.yliao.house.service.search.ISearchService;
+import com.yliao.house.web.form.RentSearch;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.xcontent.XContentType;
+import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import org.elasticsearch.index.reindex.DeleteByQueryAction;
 import org.elasticsearch.index.reindex.DeleteByQueryRequestBuilder;
 import org.elasticsearch.rest.RestStatus;
+import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.search.sort.SortOrder;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
+import sun.plugin2.util.NativeLibLoader;
 
+import javax.swing.*;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -258,6 +268,40 @@ public class SearchServiceImpl implements ISearchService {
     @Override
     public void remove(Long houseId) {
         this.remove(houseId, 0);
+    }
+
+    @Override
+    public ServiceMultiResult<Long> query(RentSearch rentSearch) {
+        BoolQueryBuilder boolQueryBuilder = new BoolQueryBuilder();
+        boolQueryBuilder.filter(
+                QueryBuilders.termQuery(HouseIndexKey.CITY_EN_NAME, rentSearch.getCityEnName())
+
+        );
+        if (rentSearch.getRegionEnName() != null && !"*".equals(rentSearch.getRegionEnName())) {
+            boolQueryBuilder.filter(
+                    QueryBuilders.termQuery(HouseIndexKey.REGION_EN_NAME, rentSearch.getRegionEnName())
+            );
+        }
+        SearchRequestBuilder builder = this.client.prepareSearch(INDEX_NAME)
+                .setTypes(INDEX_TYPE)
+                .addSort(
+                        HouseSort.getSortKey(rentSearch.getOrderBy()),
+                        SortOrder.fromString(rentSearch.getOrderDirection()))
+                .setFrom(rentSearch.getStart())
+                .setSize(rentSearch.getSize());
+        LOGGER.debug(builder.toString());
+        List<Long> houseIds = new ArrayList<>();
+        SearchResponse response = builder.get();
+        if (response.status() != RestStatus.OK) {
+            LOGGER.warn("没有在es中查询到相关数据的索引");
+            return new ServiceMultiResult<>(0, houseIds);
+        }
+        for (SearchHit hit : response.getHits()) {
+            houseIds.add(
+                    Longs.tryParse(String.valueOf(hit.getSource().get(HouseIndexKey.HOUSE_ID)))
+            );
+        }
+        return new ServiceMultiResult<>(response.getHits().getTotalHits(), houseIds);
     }
 
     private void remove(Long houseId, int retry) {
