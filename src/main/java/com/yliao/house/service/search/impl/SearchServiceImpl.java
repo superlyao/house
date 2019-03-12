@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.primitives.Longs;
 import com.yliao.house.base.HouseSort;
+import com.yliao.house.base.RentValueBlock;
 import com.yliao.house.entity.House;
 import com.yliao.house.entity.HouseDetail;
 import com.yliao.house.entity.HouseTag;
@@ -24,6 +25,7 @@ import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.index.query.RangeQueryBuilder;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import org.elasticsearch.index.reindex.DeleteByQueryAction;
 import org.elasticsearch.index.reindex.DeleteByQueryRequestBuilder;
@@ -272,7 +274,7 @@ public class SearchServiceImpl implements ISearchService {
 
     @Override
     public ServiceMultiResult<Long> query(RentSearch rentSearch) {
-        BoolQueryBuilder boolQueryBuilder = new BoolQueryBuilder();
+        BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
         boolQueryBuilder.filter(
                 QueryBuilders.termQuery(HouseIndexKey.CITY_EN_NAME, rentSearch.getCityEnName())
 
@@ -282,8 +284,53 @@ public class SearchServiceImpl implements ISearchService {
                     QueryBuilders.termQuery(HouseIndexKey.REGION_EN_NAME, rentSearch.getRegionEnName())
             );
         }
+
+        RentValueBlock area = RentValueBlock.matchArea(rentSearch.getAreaBlock());
+        if (!RentValueBlock.ALL.equals(area)) {
+            RangeQueryBuilder rangeQueryBuilder = QueryBuilders.rangeQuery(HouseIndexKey.AREA);
+            if (area.getMax() > 0) {
+                rangeQueryBuilder.lte(area.getMax());
+            }
+            if (area.getMin() > 0) {
+                rangeQueryBuilder.gte(area.getMin());
+            }
+            boolQueryBuilder.filter(rangeQueryBuilder);
+         }
+
+        RentValueBlock price = RentValueBlock.matchPrich(rentSearch.getPriceBlock());
+        if (!RentValueBlock.ALL.equals(price)) {
+            RangeQueryBuilder rangeQuery = QueryBuilders.rangeQuery(HouseIndexKey.PRICE);
+            if (price.getMax() > 0) {
+                rangeQuery.lte(price.getMax());
+            }
+            if (price.getMin() > 0) {
+                rangeQuery.gte(price.getMin());
+            }
+            boolQueryBuilder.filter(rangeQuery);
+        }
+
+        if (rentSearch.getDirection() > 0) {
+            boolQueryBuilder.filter(QueryBuilders.termQuery(HouseIndexKey.DIRECTION, rentSearch.getDirection()));
+        }
+
+        if (rentSearch.getRentWay() > -1) {
+            boolQueryBuilder.filter(QueryBuilders.termQuery(HouseIndexKey.RENT_WAY, rentSearch.getRentWay()));
+        }
+
+
+        boolQueryBuilder.must(
+                QueryBuilders.multiMatchQuery(
+                        rentSearch.getKeywords(),
+                        HouseIndexKey.TITLE,
+                        HouseIndexKey.TRAFFIC,
+                        HouseIndexKey.ROUND_SERVICE,
+                        HouseIndexKey.SUBWAY_LINE_NAME,
+                        HouseIndexKey.SUBWAY_STATION_NAME
+                        ));
+
         SearchRequestBuilder builder = this.client.prepareSearch(INDEX_NAME)
                 .setTypes(INDEX_TYPE)
+                .setQuery(boolQueryBuilder)
                 .addSort(
                         HouseSort.getSortKey(rentSearch.getOrderBy()),
                         SortOrder.fromString(rentSearch.getOrderDirection()))

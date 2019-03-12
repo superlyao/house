@@ -262,6 +262,7 @@ public class HouseServiceImpl implements IHouseService {
 
     @Override
     public ServiceMultiResult<HouseDTO> query(RentSearch rentSearch) {
+        // 如果输入了关键字搜索 就在es里面查询
         if (rentSearch.getKeywords() != null && !rentSearch.getKeywords().isEmpty()) {
             ServiceMultiResult<Long> esSearch = searchService.query(rentSearch);
             if (esSearch.getTotal() == 0) {
@@ -274,6 +275,7 @@ public class HouseServiceImpl implements IHouseService {
         return simpleQuery(rentSearch);
     }
 
+    // 数据库查询
     private ServiceMultiResult<HouseDTO> simpleQuery(RentSearch rentSearch) {
         Sort sort = HouseSort.generateSort(rentSearch.getOrderBy(), rentSearch.getOrderDirection());
         int page = rentSearch.getStart() / rentSearch.getSize();
