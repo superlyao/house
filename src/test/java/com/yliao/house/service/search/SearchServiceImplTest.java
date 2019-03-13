@@ -1,7 +1,10 @@
 package com.yliao.house.service.search;
 
 import com.yliao.house.HouseApplicationTests;
+import com.yliao.house.entity.House;
+import com.yliao.house.repository.HouseRepository;
 import com.yliao.house.service.ServiceMultiResult;
+import com.yliao.house.service.house.IHouseService;
 import com.yliao.house.web.form.RentSearch;
 import org.junit.Assert;
 import org.junit.Test;
@@ -11,6 +14,12 @@ public class SearchServiceImplTest extends HouseApplicationTests {
 
     @Autowired
     private ISearchService searchService;
+
+    @Autowired
+    private IHouseService houseService;
+
+    @Autowired
+    private HouseRepository houseRepository;
 
     @Test
     public void testIndex() {
@@ -30,5 +39,13 @@ public class SearchServiceImplTest extends HouseApplicationTests {
         search.setSize(10);
         ServiceMultiResult<Long> query = searchService.query(search);
         Assert.assertEquals(query.getTotal(), 10);
+    }
+
+    @Test
+    public void createAllTest() {
+        Iterable<House> all = houseRepository.findAll();
+        for (House house : all) {
+            searchService.index(house.getId());
+        }
     }
 }

@@ -5,6 +5,7 @@ import com.yliao.house.base.RentValueBlock;
 import com.yliao.house.entity.SupportAddress;
 import com.yliao.house.service.ServiceResult;
 import com.yliao.house.service.house.IHouseService;
+import com.yliao.house.service.search.ISearchService;
 import com.yliao.house.service.user.IUserService;
 import com.yliao.house.web.dto.*;
 import com.yliao.house.service.ServiceMultiResult;
@@ -30,6 +31,8 @@ public class HoseController {
     private IHouseService houseService;
     @Autowired
     private IUserService userService;
+    @Autowired
+    private ISearchService searchService;
 
     /**
      * 获得城市列表
@@ -157,5 +160,18 @@ public class HoseController {
         model.addAttribute("houseCountInDistrict", 0);
 
         return "house-detail";
+    }
+
+    /**
+     * 自动补全查询
+     */
+    @GetMapping("rent/house/autocomplete")
+    @ResponseBody
+    public ApiResponse autocomplete(@RequestParam(value = "prefix")String prefix) {
+        if (prefix.isEmpty()) {
+            return ApiResponse.ofStatus(ApiResponse.Status.BAD_REQUEST);
+        }
+        ServiceResult<List<String>> serviceResult = this.searchService.suggest(prefix);
+        return ApiResponse.ofSuccess(serviceResult.getResult());
     }
 }

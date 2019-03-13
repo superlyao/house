@@ -82,6 +82,9 @@
         },
         "rentWay": {
           "type": "integer"
+        },
+        "suggest": {
+          "type": "completion"
         }
       }
     }
