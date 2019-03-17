@@ -4,9 +4,11 @@ public class HouseIndexMessage {
     // 索引操作类型 创建还是删除
     public static final String INDEX = "index";
     public static final String REMOVE = "remove";
+    // 重试的最大次数
     public static final int MAX_RETRY = 3;
     private Long houseId;
-    private String operration;
+    private String operation;
+    // 重试的次数
     private int retry = 0;
 
     public HouseIndexMessage() {
@@ -15,7 +17,7 @@ public class HouseIndexMessage {
 
     public HouseIndexMessage(Long houseId, String operration, int retry) {
         this.houseId = houseId;
-        this.operration = operration;
+        this.operation = operration;
         this.retry = retry;
     }
 
@@ -27,12 +29,12 @@ public class HouseIndexMessage {
         this.houseId = houseId;
     }
 
-    public String getOperration() {
-        return operration;
+    public String getOperation() {
+        return operation;
     }
 
-    public void setOperration(String operration) {
-        this.operration = operration;
+    public void setOperation(String operation) {
+        this.operation = operation;
     }
 
     public int getRetry() {
@@ -47,7 +49,7 @@ public class HouseIndexMessage {
     public String toString() {
         return "HouseIndexMessage{" +
                 "houseId=" + houseId +
-                ", operration='" + operration + '\'' +
+                ", operration='" + operation + '\'' +
                 ", retry=" + retry +
                 '}';
     }

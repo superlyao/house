@@ -46,7 +46,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
-import sun.rmi.runtime.Log;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -93,7 +92,7 @@ public class SearchServiceImpl implements ISearchService {
         LOGGER.info("消费消息:" + content);
         try {
             HouseIndexMessage message = objectMapper.readValue(content, HouseIndexMessage.class);
-            switch (message.getOperration()) {
+            switch (message.getOperation()) {
                 case HouseIndexMessage.INDEX:
                     this.createOrUpdateIndex(message);
                     break;
@@ -194,6 +193,7 @@ public class SearchServiceImpl implements ISearchService {
     }
 
     private void index(Long houseId, int retry) {
+        // 超过最大次数 退出构建索引
         if (retry > HouseIndexMessage.MAX_RETRY) {
             LOGGER.error("创建索引失败已经超过3次,houseID为:" + houseId);
             return;
@@ -232,7 +232,7 @@ public class SearchServiceImpl implements ISearchService {
     }
 
     /**
-     * 修改文档
+     * 更新索引
      * @param esId
      * @param template
      * @return
@@ -257,13 +257,19 @@ public class SearchServiceImpl implements ISearchService {
         }
     }
 
+    /**
+     * 删除索引和创建索引
+     * @param totalHit
+     * @param template
+     * @return
+     */
     private boolean deleteAndCreate(long totalHit, HouseIndexTemplate template) {
         DeleteByQueryRequestBuilder builder = DeleteByQueryAction.INSTANCE
                 .newRequestBuilder(client)
                 .filter(QueryBuilders.termQuery(HouseIndexKey.HOUSE_ID, template.getHouseId()))
                 .source(INDEX_NAME);
 
-        LOGGER.debug("delete by query for hosue:" + builder);
+        LOGGER.debug("delete by query for house:" + builder);
 
         BulkByScrollResponse response = builder.get();
 
@@ -286,6 +292,11 @@ public class SearchServiceImpl implements ISearchService {
     }
 
 
+    /**
+     * 查询索引
+     * @param rentSearch
+     * @return
+     */
     @Override
     public ServiceMultiResult<Long> query(RentSearch rentSearch) {
         BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
@@ -370,13 +381,13 @@ public class SearchServiceImpl implements ISearchService {
     public ServiceResult<List<String>> suggest(String perfix) {
         CompletionSuggestionBuilder suggestion = SuggestBuilders.completionSuggestion("suggest").prefix(perfix).size(5);
         SuggestBuilder suggestBuilder = new SuggestBuilder();
-
         suggestBuilder.addSuggestion("autocomplete", suggestion);
+
         SearchRequestBuilder requestBuilder = this.client.prepareSearch(INDEX_NAME)
                 .setTypes(INDEX_TYPE)
                 .suggest(suggestBuilder);
-
         LOGGER.info("自动补全查询:" + requestBuilder.toString());
+
         SearchResponse response = requestBuilder.get();
         Suggest suggest = response.getSuggest();
         if (suggest == null) {
