@@ -62,7 +62,7 @@
           "analyzer": "ik_smart",
           "search_analyzer": "ik_smart"
         },
-        "layoutDesc": {
+        "layoutDesc" : {
           "type": "text",
           "index": "analyzed",
           "analyzer": "ik_smart",
@@ -83,10 +83,8 @@
         "rentWay": {
           "type": "integer"
         },
-        "district": {
-          "type": "completion",
-          "analyzer": "ik_smart",
-          "search_analyzer": "ik_smart"
+        "suggests": {
+          "type": "completion"
         }
       }
     }
