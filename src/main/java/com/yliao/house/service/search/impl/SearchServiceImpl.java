@@ -113,6 +113,7 @@ public class SearchServiceImpl implements ISearchService {
      * @param message
      */
     private void createOrUpdateIndex(HouseIndexMessage message) {
+        LOGGER.info(message.toString());
         long houseId = message.getHouseId();
         House house = houseRepository.findOne(houseId);
         if (house == null) {
@@ -378,33 +379,35 @@ public class SearchServiceImpl implements ISearchService {
     }
 
     @Override
-    public ServiceResult<List<String>> suggest(String perfix) {
-        CompletionSuggestionBuilder suggestion = SuggestBuilders.completionSuggestion("suggest").prefix(perfix).size(5);
+    public ServiceResult<List<String>> suggest(String prefix) {
+        CompletionSuggestionBuilder suggestion = SuggestBuilders.completionSuggestion("suggests").prefix(prefix).size(5);
+
         SuggestBuilder suggestBuilder = new SuggestBuilder();
         suggestBuilder.addSuggestion("autocomplete", suggestion);
 
         SearchRequestBuilder requestBuilder = this.client.prepareSearch(INDEX_NAME)
                 .setTypes(INDEX_TYPE)
                 .suggest(suggestBuilder);
-        LOGGER.info("自动补全查询:" + requestBuilder.toString());
+        LOGGER.debug(requestBuilder.toString());
 
         SearchResponse response = requestBuilder.get();
         Suggest suggest = response.getSuggest();
         if (suggest == null) {
             return ServiceResult.of(new ArrayList<>());
         }
-
-        Suggest.Suggestion autocomplete = suggest.getSuggestion("autocomplete");
+        Suggest.Suggestion result = suggest.getSuggestion("autocomplete");
 
         int maxSuggest = 0;
         Set<String> suggestSet = new HashSet<>();
 
-        for (Object entry : autocomplete.getEntries()) {
-            if (entry instanceof CompletionSuggestion.Entry) {
-                CompletionSuggestion.Entry item = (CompletionSuggestion.Entry)entry;
+        for (Object term : result.getEntries()) {
+            if (term instanceof CompletionSuggestion.Entry) {
+                CompletionSuggestion.Entry item = (CompletionSuggestion.Entry) term;
+
                 if (item.getOptions().isEmpty()) {
                     continue;
                 }
+
                 for (CompletionSuggestion.Entry.Option option : item.getOptions()) {
                     String tip = option.getText().string();
                     if (suggestSet.contains(tip)) {
@@ -414,44 +417,49 @@ public class SearchServiceImpl implements ISearchService {
                     maxSuggest++;
                 }
             }
+
             if (maxSuggest > 5) {
                 break;
             }
         }
-        ArrayList<String> result = Lists.newArrayList(suggestSet.toArray(new String[]{}));
-        return ServiceResult.of(result);
+        List<String> suggests = Lists.newArrayList(suggestSet.toArray(new String[]{}));
+        return ServiceResult.of(suggests);
     }
 
-    private boolean updateSuggest(HouseIndexTemplate template) {
+    private boolean updateSuggest(HouseIndexTemplate indexTemplate) {
         AnalyzeRequestBuilder requestBuilder = new AnalyzeRequestBuilder(
-                this.client, AnalyzeAction.INSTANCE, INDEX_NAME, template.getTitle(),
-                template.getLayoutDesc(), template.getRoundService(),
-                template.getDescription(), template.getSubwayLineName(),
-                template.getSubwayStationName()
-        );
+                this.client, AnalyzeAction.INSTANCE, INDEX_NAME, indexTemplate.getTitle(),
+                indexTemplate.getLayoutDesc(), indexTemplate.getRoundService(),
+                indexTemplate.getDescription(), indexTemplate.getSubwayLineName(),
+                indexTemplate.getSubwayStationName());
+
         requestBuilder.setAnalyzer("ik_smart");
+
         AnalyzeResponse response = requestBuilder.get();
         List<AnalyzeResponse.AnalyzeToken> tokens = response.getTokens();
         if (tokens == null) {
-            LOGGER.warn("分词失败", template.getHouseId());
+            LOGGER.warn("Can not analyze token for house: " + indexTemplate.getHouseId());
             return false;
         }
+
         List<HouseSuggest> suggests = new ArrayList<>();
         for (AnalyzeResponse.AnalyzeToken token : tokens) {
-            // 排序数字类型 && 小于两个字符的分词
+            // 排序数字类型 & 小于2个字符的分词结果
             if ("<NUM>".equals(token.getType()) || token.getTerm().length() < 2) {
                 continue;
             }
+
             HouseSuggest suggest = new HouseSuggest();
             suggest.setInput(token.getTerm());
             suggests.add(suggest);
         }
-        // 定制化需求
+
+        // 定制化小区自动补全
         HouseSuggest suggest = new HouseSuggest();
-        suggest.setInput(template.getDescription());
+        suggest.setInput(indexTemplate.getDistrict());
         suggests.add(suggest);
 
-        template.setSuggest(suggests);
+        indexTemplate.setSuggests(suggests);
         return true;
     }
 

@@ -83,8 +83,10 @@
         "rentWay": {
           "type": "integer"
         },
-        "suggest": {
-          "type": "completion"
+        "district": {
+          "type": "completion",
+          "analyzer": "ik_smart",
+          "search_analyzer": "ik_smart"
         }
       }
     }

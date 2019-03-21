@@ -47,7 +47,7 @@ public class HouseIndexTemplate {
 
     private List<String> tags;
 
-    private List<HouseSuggest> suggest;
+    private List<HouseSuggest> suggests;
 
     public Long getHouseId() {
         return houseId;
@@ -209,11 +209,11 @@ public class HouseIndexTemplate {
         this.tags = tags;
     }
 
-    public List<HouseSuggest> getSuggest() {
-        return suggest;
+    public List<HouseSuggest> getSuggests() {
+        return suggests;
     }
 
-    public void setSuggest(List<HouseSuggest> suggest) {
-        this.suggest = suggest;
+    public void setSuggests(List<HouseSuggest> suggests) {
+        this.suggests = suggests;
     }
 }
